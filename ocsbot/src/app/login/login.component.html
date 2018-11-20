@@ -1,0 +1,24 @@
+<div class="valign-wrapper row login-box">
+  <div class="col card hoverable s10 pull-s1 m6 pull-m3 l4 pull-l4">
+    <form #loginForm="ngForm" (ngSubmit)="login(loginForm)" >
+      <div class="card-content">
+        <span class="card-title">Login</span>
+        <div class="row">
+          <div class="input-field col s12">
+            <label for="username">Username</label>
+            <input type="text" class="validate" name="username" id="username" [(ngModel)] ="username" required/>
+            {{username}}
+          </div>
+          <div class="input-field col s12">
+            <label for="password">Password </label>
+            <input type="password" class="validate" name="password" id="password" [(ngModel)] ="password" required />
+            {{password}}
+          </div>
+        </div>
+      </div>
+      <div class="card-action right-align">
+        <button type="submit" class="btn btn-success" [disabled]="!loginForm.form.valid">Submit</button>
+      </div>
+    </form>
+  </div>
+</div>
