@@ -7,7 +7,7 @@ var File = require('../../models/FileSchema.js');
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, '../bot/for_consumption/')
+    cb(null, '../ocsbot/ocsbot/for_consumption/')
   },
   filename: function (req, file, cb) {
     const currentDate = moment().format("DD-MM-YYYY");
@@ -24,18 +24,24 @@ const uploadFile = async function (req, res) {
     // Everything went fine
     const newFile = {
 	    fileName: req.file.filename,
-	    author: req.body.author, //change this to the appropriate field in req.body from frontend
 	    uploadDate: moment().format()
 	 }
 
 	  File.create(newFile, function (err, file) {
 	    if (!err) {
-	      res.status(200).json({
-	        code: 200,
-	        message: 'Successfully uploaded the file'
-	      });
+	      axios.get('http://127.0.0.1:8000/admin/update').then(data => {
+          res.status(200).json({
+            code: 200,
+            message: 'Successfully uploaded the file'
+          });
+        })
+        .catch((err) => {
+          res.status(500).json({
+            code: 500,
+            message: err
+          });
+        }) 
 	    }
-	    else throw err;
 	  })
   } catch (err) {
     res.status(500).json({

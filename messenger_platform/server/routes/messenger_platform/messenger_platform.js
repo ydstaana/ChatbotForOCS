@@ -6,6 +6,10 @@ const
 	https = require('https'),  
   request = require('request');
 
+var ReviewRequest = require('../../models/ReviewRequestSchema')
+var recentQuestion;
+var Entry = require('../../models/EntrySchema.js');
+
 console.log(config.appSecret)
 /*
  * Be sure to setup your config values before running this code. You can 
@@ -190,10 +194,51 @@ function receivedMessage(event) {
   var messageAttachments = message.attachments;
   var quickReply = message.quick_reply;
 
-  if (messageText) {
+  if (quickReply) {
+    var quickReplyPayload = quickReply.payload;
+    console.log("Quick reply for message %s with payload %s",
+      messageId, quickReplyPayload);
+
+    if(quickReplyPayload == 'correct') {
+      sendTextMessage(senderID, "Thank you. Please ask away if you have any more questions.");
+    }
+    else if(quickReplyPayload == 'incorrect') {
+      requestEntry(senderID, "Would you like to request for a review of the question?");
+    }
+    else if(quickReplyPayload == 'request'){
+      sendTextMessage(senderID, "Thank you. The administrator shall review your question.");
+      ReviewRequest.create({
+        question : recentQuestion
+      }).then(() => {
+        console.log("Request created");
+      });
+    }
+    else {
+      sendTextMessage(senderID, "Thank you. Please ask away if you have any more questions.");
+    }
+    return;
+  }
+  else if (messageText) {
     axios.get('http://127.0.0.1:8000/answers/' + messageText)
     .then(response => {
-      sendTextMessage(senderID, response.data.best_span_str);
+      if(response.data.faq_id) {
+        var text = Entry.findById(response.data.faq_id).then(data => {
+          sendTextMessage(senderID, data.answer);
+          setTimeout(() => {
+            recentQuestion = messageText;
+            sendConfirmation(senderID, "Have I answered your question correctly?");
+          }, 200);
+          
+        })
+      }
+      else {
+        console.log(response.data);
+        sendTextMessage(senderID, data.answer);
+        setTimeout(() => {
+          sendConfirmation(senderID, "Have I answered your question correctly?");
+        }, 200);
+      }
+        
     })
     .catch(error => {
       console.log(error);
@@ -347,6 +392,56 @@ function sendTextMessage(recipientId, messageText) {
     message: {
       text: messageText,
       metadata: "DEVELOPER_DEFINED_METADATA"
+    }
+  };
+
+  callSendAPI(messageData);
+}
+
+function sendConfirmation(recipientId, question) {
+  var messageData = {
+    recipient: {
+      id: recipientId
+    },
+    message: {
+      text: question,
+      quick_replies: [
+        {
+          "content_type":"text",
+          "title":"Yes",
+          "payload": "correct"
+        },
+        {
+          "content_type":"text",
+          "title":"No",
+          "payload": "incorrect"
+        }
+      ]
+    }
+  };
+
+  callSendAPI(messageData);
+}
+
+function requestEntry(recipientId, question) {
+  var messageData = {
+    recipient: {
+      id: recipientId
+    },
+    message: {
+      text: question,
+      quick_replies: [
+        {
+          "content_type":"text",
+          "title":"Yes",
+          "payload": "request"
+        },
+        {
+          "content_type":"text",
+          "title":"No",
+          "payload": "not_request"
+        }
+      ]
     }
   };
 

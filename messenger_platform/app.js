@@ -21,6 +21,9 @@ const
   path = require('path'),
   mongoose = require('mongoose');
 
+axios.defaults.xsrfHeaderName = "X-CSRFToken";
+axios.defaults.xsrfCookieName = "csrftoken";
+
 const APP_SECRET = config.get('appSecret');
 
 // Arbitrary value used to validate a webhook

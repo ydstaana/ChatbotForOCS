@@ -2,7 +2,6 @@ var mongoose = require('mongoose');
 var User = require('../../models/UserSchema.js');
 
 module.exports = function (req, res, done) {
-	console.log(req.body);
 	User.create(req.body, function (err, user) {
 		console.log(req.body);
 		if (err) {
